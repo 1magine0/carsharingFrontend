@@ -7,6 +7,7 @@ import AdminLicensesPage from "../pages/AdminLicensesPage";
 import MainLayout from "../components/MainLayout";
 import { isAuthenticated } from "../utils/auth";
 import RegisterPage from "../pages/RegisterPage";
+import AdminRentalsPage from "../pages/AdminRentalsPage";
 
 function PrivateRoute({ children }) {
     return isAuthenticated() ? children : <Navigate to="/login" replace />;
@@ -31,6 +32,7 @@ export default function AppRouter() {
                     <Route path="rentals" element={<RentalsPage />} />
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="admin/licenses" element={<AdminLicensesPage />} />
+                    <Route path="admin/rentals" element={<AdminRentalsPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

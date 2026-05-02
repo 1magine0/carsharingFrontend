@@ -36,11 +36,19 @@ export default function MainLayout() {
                             </li>
 
                             {isAdmin() && (
-                                <li className="nav-item">
-                                    <Link className="nav-link" to="/admin/licenses">
-                                        Admin Licenses
-                                    </Link>
-                                </li>
+                                <>
+                                    <li className="nav-item">
+                                        <Link className="nav-link" to="/admin/licenses">
+                                            Admin Licenses
+                                        </Link>
+                                    </li>
+
+                                    <li className="nav-item">
+                                        <Link className="nav-link" to="/admin/rentals">
+                                            Admin Rentals
+                                        </Link>
+                                    </li>
+                                </>
                             )}
                         </ul>
 
