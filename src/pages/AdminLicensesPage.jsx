@@ -56,11 +56,28 @@ export default function AdminLicensesPage() {
         }
     };
 
-    if (loading) return <p>Завантаження...</p>;
+    if (loading && licenses.length === 0) return <p>Завантаження...</p>;
 
     return (
         <div>
-            <h2 className="mb-4">Pending Driver Licenses</h2>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="mb-0">Pending Driver Licenses</h2>
+
+                <button
+                    className="btn btn-outline-primary"
+                    onClick={loadLicenses}
+                    disabled={loading}
+                >
+                    {loading && (
+                        <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                        ></span>
+                    )}
+                    {loading ? "Refreshing..." : "Refresh"}
+                </button>
+            </div>
 
             {message && <div className="alert alert-success">{message}</div>}
             {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
