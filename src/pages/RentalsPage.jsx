@@ -6,6 +6,46 @@ import {
 } from "../api/rentalsApi";
 import RentalPhotosModal from "../components/RentalPhotosModal";
 import { getRentalPhotosRequest } from "../api/rentalPhotosApi";
+import {
+    createMockPaymentRequest,
+    mockPayRequest,
+    createLiqPayPaymentRequest,
+} from "../api/paymentsApi";
+
+function formatDateTime(value) {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleString("uk-UA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+const submitLiqPayForm = ({ checkoutUrl, data, signature }) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = checkoutUrl;
+    form.acceptCharset = "utf-8";
+
+    const dataInput = document.createElement("input");
+    dataInput.type = "hidden";
+    dataInput.name = "data";
+    dataInput.value = data;
+
+    const signatureInput = document.createElement("input");
+    signatureInput.type = "hidden";
+    signatureInput.name = "signature";
+    signatureInput.value = signature;
+
+    form.appendChild(dataInput);
+    form.appendChild(signatureInput);
+
+    document.body.appendChild(form);
+    form.submit();
+};
 
 export default function RentalsPage() {
     const [rentals, setRentals] = useState([]);
@@ -15,6 +55,49 @@ export default function RentalsPage() {
     const [errorMessage, setErrorMessage] = useState("");
     const [photosModal, setPhotosModal] = useState(null);
     const [activeRentalPhotos, setActiveRentalPhotos] = useState([]);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+
+    const handleMockPayment = async (rentalId) => {
+        setPaymentLoading(true);
+        setMessage("");
+        setErrorMessage("");
+
+        try {
+            const payment = await createMockPaymentRequest(rentalId);
+            await mockPayRequest(payment.id);
+
+            setMessage("Оплату виконано успішно");
+            await loadData();
+        } catch (error) {
+            const backendMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                "Не вдалося виконати оплату";
+
+            setErrorMessage(backendMessage);
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
+    const handleLiqPayPayment = async (rentalId) => {
+        setPaymentLoading(true);
+        setMessage("");
+        setErrorMessage("");
+
+        try {
+            const checkoutData = await createLiqPayPaymentRequest(rentalId);
+            submitLiqPayForm(checkoutData);
+        } catch (error) {
+            const backendMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                "Не вдалося створити LiqPay платіж";
+
+            setErrorMessage(backendMessage);
+            setPaymentLoading(false);
+        }
+    };
 
     const loadActiveRentalPhotos = async (rentalId) => {
         if (!rentalId) {
@@ -83,6 +166,9 @@ export default function RentalsPage() {
 
     const hasBeforePhoto = beforePhotos.length > 0;
     const hasAfterPhoto = afterPhotos.length > 0;
+
+    const bookedRentals = rentals.filter((rental) => rental.status === "BOOKED");
+    const paidOrFinishedRentals = rentals.filter((rental) => rental.status !== "BOOKED");
 
     return (
         <div>
@@ -190,11 +276,107 @@ export default function RentalsPage() {
                     </div>
                 )}
             </div>
+            {bookedRentals.length > 0 && (
+                <div className="card shadow-sm mb-4 border-warning">
+                    <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h4 className="card-title mb-1 text-warning">
+                                    Payment Required
+                                </h4>
+                                <p className="text-muted mb-0">
+                                    У вас є оренда, яка очікує оплати. Після успішної оплати вона стане активною.
+                                </p>
+                            </div>
 
+                            <span className="badge bg-warning text-dark">
+                    {bookedRentals.length}
+                </span>
+                        </div>
+
+                        <div className="table-responsive">
+                            <table className="table table-bordered align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Car</th>
+                                    <th>Tariff</th>
+                                    <th>Period</th>
+                                    <th>Total price</th>
+                                    <th>Bonus used</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {bookedRentals.map((rental) => (
+                                    <tr key={rental.id}>
+                                        <td>{rental.id}</td>
+
+                                        <td>
+                                            <div className="fw-semibold">
+                                                {rental.carBrand} {rental.carModel}
+                                            </div>
+                                            <div className="text-muted small">
+                                                {rental.carRegistrationNumber}
+                                            </div>
+                                        </td>
+
+                                        <td>{rental.tariffType}</td>
+
+                                        <td>
+                                            <div>
+                                                <strong>Start:</strong>{" "}
+                                                {formatDateTime(rental.startTime)}
+                                            </div>
+                                            <div>
+                                                <strong>End:</strong>{" "}
+                                                {formatDateTime(rental.endTime)}
+                                            </div>
+                                        </td>
+
+                                        <td>{rental.totalPrice} грн</td>
+
+                                        <td>{rental.bonusUsed} бонусів</td>
+
+                                        <td>
+                                    <span className="badge bg-warning text-dark">
+                                        {rental.status}
+                                    </span>
+                                        </td>
+
+                                        <td>
+                                            <div className="d-grid gap-2">
+                                                <button
+                                                    className="btn btn-success btn-sm"
+                                                    onClick={() => handleLiqPayPayment(rental.id)}
+                                                    disabled={paymentLoading}
+                                                >
+                                                    {paymentLoading ? "Redirecting..." : "Pay with LiqPay"}
+                                                </button>
+
+                                                <button
+                                                    className="btn btn-outline-secondary btn-sm"
+                                                    onClick={() => handleMockPayment(rental.id)}
+                                                    disabled={paymentLoading}
+                                                >
+                                                    Mock pay
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div>
                 <h4>Rental History</h4>
 
-                {rentals.length === 0 ? (
+                {paidOrFinishedRentals.length === 0 ? (
                     <div className="alert alert-secondary">Оренд поки немає</div>
                 ) : (
                     <div className="table-responsive">
@@ -211,7 +393,7 @@ export default function RentalsPage() {
                             </tr>
                             </thead>
                             <tbody>
-                            {rentals.map((rental) => (
+                            {paidOrFinishedRentals.map((rental) => (
                                 <tr key={rental.id}>
                                     <td>{rental.id}</td>
                                     <td>
