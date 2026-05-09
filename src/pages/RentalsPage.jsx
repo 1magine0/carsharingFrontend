@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-    finishRentalRequest,
-    getMyActiveRentalRequest,
     getMyRentalsRequest,
+    getMyActiveRentalRequest,
+    finishRentalRequest,
+    unlockRentalCarRequest,
 } from "../api/rentalsApi";
 import RentalPhotosModal from "../components/RentalPhotosModal";
 import { getRentalPhotosRequest } from "../api/rentalPhotosApi";
@@ -56,6 +57,8 @@ export default function RentalsPage() {
     const [photosModal, setPhotosModal] = useState(null);
     const [activeRentalPhotos, setActiveRentalPhotos] = useState([]);
     const [paymentLoading, setPaymentLoading] = useState(false);
+    const [unlockLoading, setUnlockLoading] = useState(false);
+    const [unlockMessage, setUnlockMessage] = useState("");
 
     const handleMockPayment = async (rentalId) => {
         setPaymentLoading(true);
@@ -158,6 +161,26 @@ export default function RentalsPage() {
         }
     };
 
+    const handleUnlockCar = async (rentalId) => {
+        setUnlockLoading(true);
+        setUnlockMessage("");
+        setErrorMessage("");
+
+        try {
+            const response = await unlockRentalCarRequest(rentalId);
+            setUnlockMessage(response.message || "Авто розблоковано");
+        } catch (error) {
+            const backendMessage =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                "Не вдалося розблокувати авто";
+
+            setErrorMessage(backendMessage);
+        } finally {
+            setUnlockLoading(false);
+        }
+    };
+
     if (loading) {
         return <p>Завантаження...</p>;
     }
@@ -255,6 +278,27 @@ export default function RentalsPage() {
                                     )}
                                 </div>
                             </div>
+                            <div className="mb-3">
+                                <button
+                                    className="btn btn-dark w-100"
+                                    onClick={() => handleUnlockCar(activeRental.id)}
+                                    disabled={!hasBeforePhoto || unlockLoading}
+                                >
+                                    {unlockLoading ? "Scanning NFC..." : "Scan NFC / Unlock car"}
+                                </button>
+
+                                {!hasBeforePhoto && (
+                                    <div className="form-text text-danger mt-2">
+                                        Перед розблокуванням авто потрібно додати хоча б одне фото до оренди.
+                                    </div>
+                                )}
+                            </div>
+
+                            {unlockMessage && (
+                                <div className="alert alert-success">
+                                    {unlockMessage}
+                                </div>
+                            )}
                             <button
                                 className="btn btn-danger"
                                 disabled={!hasAfterPhoto}

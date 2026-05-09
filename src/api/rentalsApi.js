@@ -24,3 +24,8 @@ export const finishRentalRequest = async (rentalId) => {
     const response = await axiosClient.post(`/rentals/${rentalId}/finish`);
     return response.data;
 };
+
+export const unlockRentalCarRequest = async (rentalId) => {
+    const response = await axiosClient.post(`/rentals/${rentalId}/unlock`);
+    return response.data.data;
+};

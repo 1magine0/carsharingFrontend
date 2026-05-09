@@ -27,6 +27,8 @@ function getStatusBadgeClass(status) {
             return "bg-danger";
         case "BOOKED":
             return "bg-primary";
+        case "EXPIRED":
+            return "bg-warning text-dark";
         default:
             return "bg-dark";
     }
@@ -243,6 +245,11 @@ export default function AdminRentalsPage() {
                                             )}`}
                                         >
                                             {rental.status}
+                                            {rental.status === "EXPIRED" && (
+                                                <div className="text-warning small">
+                                                    Час оренди завершився автоматично. Авто очікує перевірки адміністратором.
+                                                </div>
+                                            )}
                                         </span>
                                 </td>
                             </tr>
