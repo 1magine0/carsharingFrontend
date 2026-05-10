@@ -12,6 +12,7 @@ import {
     setMainCarImageRequest,
     deleteCarImageRequest,
 } from "../api/adminCarsApi";
+import CarsMap from "../components/CarsMap";
 
 const initialFilters = {
     search: "",
@@ -161,6 +162,7 @@ export default function CarsPage() {
     const [carForm, setCarForm] = useState(initialCarForm);
     const [carFormError, setCarFormError] = useState("");
     const [editingCarId, setEditingCarId] = useState(null);
+    const [viewMode, setViewMode] = useState("cards");
 
     const [carImageFile, setCarImageFile] = useState(null);
     const [carImageIsMain, setCarImageIsMain] = useState(true);
@@ -758,82 +760,113 @@ export default function CarsPage() {
                             </button>
                         </div>
                     </div>
+                    <div className="mt-3 d-flex justify-content-between align-items-center">
+                        <div className="text-muted">
+                            Знайдено авто: {filteredCars.length} / {cars.length}
+                        </div>
 
-                    <div className="mt-3 text-muted">
-                        Знайдено авто: {filteredCars.length} / {cars.length}
+                        <div className="btn-group" role="group">
+                            <button
+                                className={`btn ${
+                                    viewMode === "cards" ? "btn-primary" : "btn-outline-primary"
+                                }`}
+                                onClick={() => setViewMode("cards")}
+                            >
+                                Cards
+                            </button>
+
+                            <button
+                                className={`btn ${
+                                    viewMode === "map" ? "btn-primary" : "btn-outline-primary"
+                                }`}
+                                onClick={() => setViewMode("map")}
+                            >
+                                Map
+                            </button>
+                        </div>
                     </div>
+
                 </div>
             </div>
-            <div className="row g-4">
-                {filteredCars.map((car) => (
-                    <div className="col-md-6 col-lg-4" key={car.id}>
-                        <div className="card h-100 shadow-sm">
-                            <img
-                                src={
-                                    car.imageUrl ||
-                                    "https://via.placeholder.com/400x220?text=No+Image"
-                                }
-                                className="card-img-top"
-                                alt={`${car.brand} ${car.model}`}
-                                style={{ height: "220px", objectFit: "cover" }}
-                            />
+            {filteredCars.length === 0 ? (
+                <div className="alert alert-secondary">
+                    За вибраними фільтрами авто не знайдено
+                </div>
+            ) : viewMode === "map" ? (
+                <CarsMap cars={filteredCars} onRent={openRentalModal} />
+            ) : (
+                <div className="row g-4">
+                    {filteredCars.map((car) => (
+                        <div className="col-md-6 col-lg-4" key={car.id}>
+                            <div className="card h-100 shadow-sm">
+                                <img
+                                    src={
+                                        car.imageUrl ||
+                                        "https://via.placeholder.com/400x220?text=No+Image"
+                                    }
+                                    className="card-img-top"
+                                    alt={`${car.brand} ${car.model}`}
+                                    style={{ height: "220px", objectFit: "cover" }}
+                                />
 
-                            <div className="card-body d-flex flex-column">
-                                <h5 className="card-title">
-                                    {car.brand} {car.model}
-                                </h5>
+                                <div className="card-body d-flex flex-column">
+                                    <h5 className="card-title">
+                                        {car.brand} {car.model}
+                                    </h5>
 
-                                <p className="card-text mb-1">
-                                    <strong>Address:</strong> {car.address}
-                                </p>
+                                    <p className="card-text mb-1">
+                                        <strong>Address:</strong> {car.address}
+                                    </p>
 
-                                <p className="card-text mb-1">
-                                    <strong>Hourly:</strong> {car.pricePerHour} грн
-                                </p>
+                                    <p className="card-text mb-1">
+                                        <strong>Hourly:</strong> {car.pricePerHour} грн
+                                    </p>
 
-                                <p className="card-text mb-1">
-                                    <strong>Daily:</strong> {car.pricePerDay} грн
-                                </p>
+                                    <p className="card-text mb-1">
+                                        <strong>Daily:</strong> {car.pricePerDay} грн
+                                    </p>
 
-                                <p className="card-text mb-2">
-                                    <strong>Monthly:</strong> {car.pricePerMonth} грн
-                                </p>
+                                    <p className="card-text mb-2">
+                                        <strong>Monthly:</strong> {car.pricePerMonth} грн
+                                    </p>
 
-                                <p className="mb-3">
-                                    <strong>Status:</strong>{" "}
-                                    <span className={car.status === "AVAILABLE" ? "text-success" : "text-danger"}>
+                                    <p className="mb-3">
+                                        <strong>Status:</strong>{" "}
+                                        <span className={car.status === "AVAILABLE" ? "text-success" : "text-danger"}>
                                         {car.status}
                                     </span>
-                                </p>
+                                    </p>
 
-                                <div className="mt-auto">
-                                    {isAdmin() && (
-                                        <button
-                                            className="btn btn-outline-warning w-100 mb-2"
-                                            onClick={() => openEditCarModal(car)}
-                                        >
-                                            Edit car
-                                        </button>
-                                    )}
+                                    <div className="mt-auto">
+                                        {isAdmin() && (
+                                            <button
+                                                className="btn btn-outline-warning w-100 mb-2"
+                                                onClick={() => openEditCarModal(car)}
+                                            >
+                                                Edit car
+                                            </button>
+                                        )}
 
-                                    {car.status === "AVAILABLE" ? (
-                                        <button
-                                            className="btn btn-primary w-100"
-                                            onClick={() => openRentalModal(car)}
-                                        >
-                                            Rent
-                                        </button>
-                                    ) : (
-                                        <button className="btn btn-secondary w-100" disabled>
-                                            Not available
-                                        </button>
-                                    )}
+                                        {car.status === "AVAILABLE" ? (
+                                            <button
+                                                className="btn btn-primary w-100"
+                                                onClick={() => openRentalModal(car)}
+                                            >
+                                                Rent
+                                            </button>
+                                        ) : (
+                                            <button className="btn btn-secondary w-100" disabled>
+                                                Not available
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
+
 
             {selectedCar && (
                 <>

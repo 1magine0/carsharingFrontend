@@ -12,6 +12,7 @@ export default function RegisterPage() {
         phone: "",
         password: "",
         confirmPassword: "",
+        referralCode: "",
     });
 
     const [error, setError] = useState("");
@@ -97,6 +98,20 @@ export default function RegisterPage() {
                                     placeholder="+380991112233"
                                     required
                                 />
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">Referral code</label>
+                                <input
+                                    className="form-control"
+                                    name="referralCode"
+                                    value={form.referralCode}
+                                    onChange={handleChange}
+                                    placeholder="Optional"
+                                />
+                                <div className="form-text">
+                                    Якщо маєте код запрошення, введіть його тут.
+                                </div>
                             </div>
 
                             <div className="mb-3">

@@ -239,7 +239,19 @@ export default function ProfilePage() {
                         )}
 
                         <p><strong>Status:</strong> {user.status}</p>
-                        <p><strong>Referral code:</strong> {user.referralCode}</p>
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                            <div>
+                                <strong>Referral code:</strong> {user.referralCode}
+                            </div>
+
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => navigator.clipboard.writeText(user.referralCode)}
+                            >
+                                Copy
+                            </button>
+                        </div>
                         <p><strong>Bonus balance:</strong> {bonusBalance}</p>
                     </div>
                 </div>
