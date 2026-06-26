@@ -1,17 +1,31 @@
-export const TOKEN_KEY = "token";
-export const ROLE_KEY = "role";
+import { notifyAuthChanged } from "./authEvents";
 
-export const saveAuthData = (token, role) => {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(ROLE_KEY, role);
+// FE-3: the JWT now lives in an HttpOnly cookie that JS cannot read. We keep only
+// a non-sensitive {email, role} snapshot in localStorage so route guards and the
+// navbar can render synchronously. This is NOT a security boundary — the backend
+// independently enforces auth and ADMIN access on every request; tampering with
+// this value only changes what the UI optimistically shows before the server
+// rejects the call (401/403).
+export const AUTH_KEY = "auth";
+
+export const saveAuthData = ({ email, role }) => {
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ email, role }));
+    notifyAuthChanged();
 };
 
-export const getToken = () => {
-    return localStorage.getItem(TOKEN_KEY);
+export const getAuthUser = () => {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
 };
 
 export const getRole = () => {
-    return localStorage.getItem(ROLE_KEY);
+    return getAuthUser()?.role ?? null;
 };
 
 export const isAdmin = () => {
@@ -19,10 +33,13 @@ export const isAdmin = () => {
 };
 
 export const removeAuthData = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(AUTH_KEY);
+    notifyAuthChanged();
 };
 
 export const isAuthenticated = () => {
-    return !!getToken();
+    // Presence of the snapshot means "logged in as far as the UI knows". The
+    // cookie's real validity is the server's call — an expired cookie yields a
+    // 401, which the axios interceptor turns into removeAuthData() + redirect.
+    return getAuthUser() !== null;
 };

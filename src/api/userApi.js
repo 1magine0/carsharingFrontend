@@ -9,3 +9,8 @@ export const updateCurrentUserRequest = async (payload) => {
     const response = await axiosClient.put("/users/me", payload);
     return response.data.data;
 };
+
+export const changePasswordRequest = async (payload) => {
+    const response = await axiosClient.post("/users/me/password", payload);
+    return response.data;
+};
